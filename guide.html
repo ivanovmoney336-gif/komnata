@@ -1,0 +1,253 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Инструкция по размещению — Комната</title>
+<meta name="description" content="Пошагово: как бесплатно разместить видеокомнату на Netlify, GitHub Pages или Cloudflare Pages, что делать при ошибке авторизации и как подключить свой сервер сигнализации.">
+<meta name="theme-color" content="#0a0b0e">
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body data-view="guide">
+
+<svg class="sprite" aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg">
+  <symbol id="i-arrow-left" viewBox="0 0 24 24"><path d="M14.5 5l-7 7 7 7"/></symbol>
+  <symbol id="i-settings" viewBox="0 0 24 24"><path d="M4 7h9M19 7h1M4 17h1M11 17h9"/><circle cx="16" cy="7" r="2.2"/><circle cx="8" cy="17" r="2.2"/></symbol>
+</svg>
+
+<header class="topbar">
+  <a class="wordmark" href="./">
+    <span class="wordmark-dot"></span>
+    <span>Комната</span>
+  </a>
+  <nav class="topbar-nav">
+    <a class="ghost-link" href="./">К комнате</a>
+    <span class="icon-link"><svg class="icon"><use href="#i-settings"></use></svg><span>Инструкция</span></span>
+  </nav>
+</header>
+
+<main class="doc-wrap doc">
+  <a class="doc-back" href="./"><svg class="icon"><use href="#i-arrow-left"></use></svg> Вернуться к комнате</a>
+
+  <h1>Размещение и запуск</h1>
+  <p class="doc-lede">Сайт полностью статический: здесь нет серверной части, базы данных и аккаунтов. Его можно бесплатно опубликовать на любом статическом хостинге, а видео будет идти напрямую между браузерами. Ниже — три бесплатных варианта по возрастанию сложности, обход ошибки авторизации и проверка перед отправкой ссылки.</p>
+
+  <div class="doc-note">
+    <b>Главное условие:</b> сайт должен открываться по <code>https://</code>. Браузеры разрешают камеру и микрофон только на защищённом соединении. Все варианты ниже дают HTTPS автоматически.
+  </div>
+
+  <h2>Что уже готово</h2>
+  <p>В папке сайта несколько файлов — этого достаточно для работы:</p>
+  <table class="doc-table">
+    <tr><th>Файл</th><th>Зачем нужен</th></tr>
+    <tr><td>index.html</td><td>Главная страница: создание комнаты, вход по ссылке, комната, чат</td></tr>
+    <tr><td>styles.css</td><td>Всё оформление, тёмная тема, адаптив под телефон</td></tr>
+    <tr><td>app.js</td><td>Логика: комнаты на 10 мест, WebRTC, чат с картинками, показ экрана</td></tr>
+    <tr><td>vendor/peerjs.min.js</td><td>Библиотека сигнализации (лежит локально, CDN не нужен)</td></tr>
+    <tr><td>guide.html</td><td>Эта инструкция</td></tr>
+  </table>
+
+  <h3>Как это работает в двух словах</h3>
+  <p><b>Сигнализация.</b> Когда вы открываете ссылку, браузер через бесплатный сервер PeerJS Cloud узнаёт, кто ещё в комнате, и обменивается техническими данными для соединения. Сервер видит только идентификаторы комнаты и не хранит видео, звук или сообщения.</p>
+  <p><b>Видео и чат.</b> Дальше браузеры соединяются напрямую (технология WebRTC). Видео, голос, картинки и текст идут от участника к участнику, минуя сервер. Поэтому нет оплаты за трафик и нет хранилища сообщений: закрыли вкладку — переписка исчезла.</p>
+  <p><b>Ограничение.</b> Это mesh-схема: каждый отправляет свою картинку каждому. Для 2–5 человек работает отлично, для 10 — только на хорошем интернете (приложение само снижает битрейт при большом числе участников).</p>
+
+  <h2>Почему не работает во встроенном предпросмотре AutoClaw</h2>
+  <p>У предпросмотра AutoClaw жёсткая политика безопасности (CSP): странице разрешены сетевые соединения только со своего домена. Для видеосвязи нужен внешний сервер знакомства (WebSocket), и браузер его блокирует — поэтому второй участник видит «Не удалось подключиться». Это ограничение хостинга, а не сайта: на Netlify, GitHub Pages и Cloudflare Pages такой политики нет.</p>
+  <p><b>Вывод:</b> проверять видео нужно на опубликованном сайте, а не во встроенном предпросмотре. Чат, кнопки и интерфейс в предпросмотре работают.</p>
+
+  <h3>Про плашку «Made with AutoClaw»</h3>
+  <p>Её вставляет сам хостинг AutoClaw, а не сайт: она приходит из отдельного iframe и автоматически восстанавливается, поэтому убрать её правкой файлов нельзя. Легальные способы: опубликовать сайт на своём домене (Netlify и другие хостинги) — там плашки нет; либо в интерфейсе AutoClaw привязать свой домен или подтвердить сайт (Verified / Certified).</p>
+
+  <h2>Вариант 1. Netlify Drop (рекомендую)</h2>
+  <p>Самый быстрый путь: перетащить папку в окно браузера и получить готовую ссылку. Регистрация по почте, без карты, без Git. HTTPS включается автоматически.</p>
+  <ol class="doc-steps">
+    <li class="doc-step"><span class="doc-step-num">1</span><div class="doc-step-body"><b>Откройте Netlify Drop</b><span><a href="https://app.netlify.com/drop" target="_blank" rel="noopener">app.netlify.com/drop</a> — там большое поле «Drag and drop your site folder».</span></div></li>
+    <li class="doc-step"><span class="doc-step-num">2</span><div class="doc-step-body"><b>Перетащите папку сайта целиком</b><span>Важно: <code>index.html</code> должен оказаться в корне, а рядом — папка <code>vendor</code>. Если перетащить саму папку с сайтом, а не её содержимое, Netlify может создать лишний уровень вложенности.</span></div></li>
+    <li class="doc-step"><span class="doc-step-num">3</span><div class="doc-step-body"><b>Войдите, чтобы закрепить сайт</b><span>Нажмите <b>Sign up</b> → почта и пароль. Без аккаунта ссылка живёт недолго; после входа сайт остаётся навсегда и появляется в панели.</span></div></li>
+    <li class="doc-step"><span class="doc-step-num">4</span><div class="doc-step-body"><b>Смените имя</b><span><b>Site configuration</b> → <b>Change site name</b> → например <code>komnata-ivan</code>. Адрес станет <code>https://komnata-ivan.netlify.app</code>.</span></div></li>
+    <li class="doc-step"><span class="doc-step-num">5</span><div class="doc-step-body"><b>Проверьте с телефона</b><span>Откройте полученный адрес на телефоне, создайте комнату и зайдите по этой же ссылке ещё раз — должны увидеть себя на втором устройстве.</span></div></li>
+  </ol>
+  <p><b>Как обновлять.</b> Сайт в панели Netlify → вкладка <b>Deploys</b> → <b>Deploy manually</b> → снова перетащите папку. Адрес не изменится.</p>
+
+  <div class="doc-note doc-warn">
+    <b>Если при входе пишет Authentication Error:</b> откройте сайт в режиме инкогнито, отключите VPN и блокировщик рекламы, разрешите сторонние cookie и войдите по почте, а не через Google/GitHub. В 9 случаях из 10 это решает проблему. Если почта не приходит — проверьте «Спам» и попробуйте другой адрес.
+  </div>
+
+  <h2>Вариант 2. GitHub Pages</h2>
+  <p>Подходит, если у вас уже есть аккаунт GitHub. Бесплатно для публичных репозиториев, история версий и откат — из коробки.</p>
+  <ol class="doc-steps">
+    <li class="doc-step"><span class="doc-step-num">1</span><div class="doc-step-body"><b>Аккаунт GitHub</b><span>Зарегистрируйтесь на <a href="https://github.com/signup" target="_blank" rel="noopener">github.com/signup</a>.</span></div></li>
+    <li class="doc-step"><span class="doc-step-num">2</span><div class="doc-step-body"><b>Новый репозиторий</b><span><b>New repository</b> → имя, например <code>komnata</code> → тип <b>Public</b> → <b>Create repository</b>.</span></div></li>
+    <li class="doc-step"><span class="doc-step-num">3</span><div class="doc-step-body"><b>Загрузите сайт</b><span><b>Add file</b> → <b>Upload files</b>. Перетащите <code>index.html</code>, <code>styles.css</code>, <code>app.js</code>, <code>guide.html</code>, <code>favicon.svg</code> и папку <code>vendor</code>. Важно: <code>index.html</code> должен лежать в корне репозитория. Нажмите <b>Commit changes</b>.</span></div></li>
+    <li class="doc-step"><span class="doc-step-num">4</span><div class="doc-step-body"><b>Включите Pages</b><span><b>Settings</b> → <b>Pages</b> → <b>Source</b>: <b>Deploy from a branch</b> → ветка <b>main</b>, папка <b>/ (root)</b> → <b>Save</b>.</span></div></li>
+    <li class="doc-step"><span class="doc-step-num">5</span><div class="doc-step-body"><b>Получите адрес</b><span>Через 1–2 минуты сайт будет доступен по адресу <code>https://ваш-логин.github.io/komnata/</code>. HTTPS включается автоматически.</span></div></li>
+  </ol>
+  <div class="doc-note doc-warn"><b>Нюанс:</b> на бесплатном тарифе репозиторий должен быть публичным — исходники увидит любой. Секретов в проекте нет, но учитывайте это.</div>
+
+  <h2>Вариант 3. Cloudflare Pages</h2>
+  <p>Тоже бесплатно и без ограничения трафика, но вход в панель из некоторых сетей даёт ошибку авторизации. Если регистрация проходит — вариант отличный.</p>
+  <ol class="doc-steps">
+    <li class="doc-step"><span class="doc-step-num">1</span><div class="doc-step-body"><b>Зарегистрируйтесь</b><span>Откройте <a href="https://dash.cloudflare.com/sign-up" target="_blank" rel="noopener">dash.cloudflare.com/sign-up</a>, введите почту и пароль. Подтвердите письмо. Платный тариф не нужен.</span></div></li>
+    <li class="doc-step"><span class="doc-step-num">2</span><div class="doc-step-body"><b>Создайте проект Pages</b><span>В левом меню: <b>Workers &amp; Pages</b> → <b>Create</b> → вкладка <b>Pages</b> → <b>Upload assets</b>.</span></div></li>
+    <li class="doc-step"><span class="doc-step-num">3</span><div class="doc-step-body"><b>Назовите проект</b><span>Например, <code>komnata</code>. Имя станет адресом: <code>komnata.pages.dev</code>. Нажмите <b>Create project</b>.</span></div></li>
+    <li class="doc-step"><span class="doc-step-num">4</span><div class="doc-step-body"><b>Загрузите файлы</b><span>Перетащите в окно <b>содержимое</b> папки сайта так, чтобы <code>index.html</code> оказался в корне. Нажмите <b>Deploy site</b>.</span></div></li>
+    <li class="doc-step"><span class="doc-step-num">5</span><div class="doc-step-body"><b>Проверьте</b><span>Через несколько секунд появится адрес вида <code>https://komnata.pages.dev</code>.</span></div></li>
+  </ol>
+  <p><b>Как обновлять.</b> В проекте: <b>Create new deployment</b> → снова перетащите файлы → Deploy.</p>
+
+  <h2>Свой домен: пошагово</h2>
+  <p>Домен нужен, если провайдер блокирует бесплатные адреса вроде <code>workers.dev</code> и <code>onrender.com</code>. Свой домен в чёрных списках не находится, а всё остальное (Cloudflare, воркеры, сертификат, трафик) остаётся бесплатным.</p>
+  <ol class="doc-steps">
+    <li class="doc-step"><span class="doc-step-num">1</span><div class="doc-step-body"><b>Купите домен</b><span>Любой регистратор, лишь бы можно было менять NS-серверы. Подойдёт <code>.ru</code>, <code>.com</code> или дешёвый <code>.xyz</code>.</span></div></li>
+    <li class="doc-step"><span class="doc-step-num">2</span><div class="doc-step-body"><b>Добавьте его в Cloudflare</b><span>В панели Cloudflare: <b>Add a domain</b> → введите домен → план <b>Free</b>. Cloudflare покажет два своих NS-сервера.</span></div></li>
+    <li class="doc-step"><span class="doc-step-num">3</span><div class="doc-step-body"><b>Замените NS у регистратора</b><span>В настройках домена укажите оба NS из Cloudflare вместо старых. Активация — от 5 минут до 24 часов, Cloudflare пришлёт письмо.</span></div></li>
+    <li class="doc-step"><span class="doc-step-num">4</span><div class="doc-step-body"><b>Привяжите сайт</b><span><b>Workers &amp; Pages</b> → воркер с сайтом → <b>Settings</b> → <b>Domains &amp; Routes</b> → <b>Add</b> → <b>Custom domain</b> → ваш домен, например <code>example.ru</code>.</span></div></li>
+    <li class="doc-step"><span class="doc-step-num">5</span><div class="doc-step-body"><b>Привяжите прокси</b><span>Там же у воркера <code>komnata-signal</code> → <b>Domains &amp; Routes</b> → <b>Custom domain</b> → <code>signal.example.ru</code>.</span></div></li>
+    <li class="doc-step"><span class="doc-step-num">6</span><div class="doc-step-body"><b>Откройте сайт</b><span><code>https://example.ru</code> — сайт сам возьмёт прокси с <code>signal.example.ru</code>, и VPN больше не понадобится.</span></div></li>
+  </ol>
+  <p><b>Важно:</b> не добавляйте A/CNAME вручную. При привязке Custom domain Cloudflare создаёт DNS-запись сам; если такая запись уже есть и мешает — удалите её.</p>
+
+  <h2>Другие варианты привязки</h2>
+  <ul>
+    <li><b>Netlify:</b> <b>Domain management</b> → <b>Add a domain</b> → следуйте подсказкам.</li>
+    <li><b>GitHub Pages:</b> <b>Settings</b> → <b>Pages</b> → <b>Custom domain</b> → домен → включите <b>Enforce HTTPS</b>. В DNS: CNAME на <code>ваш-логин.github.io</code>.</li>
+  </ul>
+
+  <h2>Если работает только через VPN (Россия)</h2>
+  <p>Сам сайт на <code>workers.dev</code> из России открывается, а вот <code>0.peerjs.com</code> — нет: DNS подменяется, и запрос возвращает <code>403</code> с чужого IP. Поэтому без VPN браузеры не могут найти друг друга. Решение — маленький прокси-воркер в вашем же аккаунте Cloudflare: он принимает соединение с российского IP и сам соединяется с PeerJS из сети Cloudflare.</p>
+  <ol class="doc-steps">
+    <li class="doc-step"><span class="doc-step-num">1</span><div class="doc-step-body"><b>Создайте воркер</b><span>Cloudflare → <b>Workers &amp; Pages</b> → <b>Create</b> → <b>Worker</b> → имя <code>komnata-signal</code> → <b>Deploy</b>.</span></div></li>
+    <li class="doc-step"><span class="doc-step-num">2</span><div class="doc-step-body"><b>Вставьте код</b><span>Откройте <b>Edit code</b>, удалите шаблон и вставьте код ниже (он целиком в одном блоке). Нажмите <b>Deploy</b>.</span></div></li>
+    <li class="doc-step"><span class="doc-step-num">3</span><div class="doc-step-body"><b>Проверьте адрес</b><span>Должен получиться <code>https://komnata-signal.ivanovmoney336.workers.dev</code>. Именно этот адрес уже прописан в сайте как сервер по умолчанию.</span></div></li>
+  </ol>
+  <p>Если назовёте воркер иначе — откройте сайт, нажмите <b>Сервер</b> и впишите новый адрес в поле «Хост». Тогда настройка применится только в вашем браузере; чтобы она работала у всех, адрес нужно поменять в коде.</p>
+  <pre><code>export default {
+  async fetch(request) {
+    const url = new URL(request.url);
+    const target = new URL(url.pathname + url.search, 'https://0.peerjs.com');
+
+    if ((request.headers.get('Upgrade') || '').toLowerCase() !== 'websocket') {
+      return fetch(target.toString(), {
+        method: request.method,
+        headers: request.headers
+      });
+    }
+
+    const pair = new WebSocketPair();
+    const [client, server] = Object.values(pair);
+    server.accept();
+
+    const upstreamResponse = await fetch(target.toString(), {
+      headers: { Upgrade: 'websocket' }
+    });
+    const upstream = upstreamResponse.webSocket;
+    if (!upstream) {
+      server.close(1011, 'no upstream');
+      return new Response('no upstream', { status: 502 });
+    }
+    upstream.accept();
+
+    server.addEventListener('message', (e) => {
+      try { upstream.send(e.data); } catch (err) {}
+    });
+    upstream.addEventListener('message', (e) => {
+      try { server.send(e.data); } catch (err) {}
+    });
+    server.addEventListener('close', () => { try { upstream.close(); } catch (err) {} });
+    upstream.addEventListener('close', () => { try { server.close(); } catch (err) {} });
+
+    return new Response(null, { status: 101, webSocket: client });
+  }
+};</code></pre>
+  <div class="doc-note"><b>Проверено:</b> прокси-воркер собран и протестирован локально — два браузера соединяются через него, видео и чат работают. Воркер не хранит данные: он только пересылает технические сообщения знакомства.</div>
+
+  <h2>Если сервер сигнализации недоступен</h2>
+  <p>PeerJS Cloud — бесплатный общий сервис. В редких случаях он перегружен или заблокирован провайдером. Тогда поднимите свой сервер на бесплатном тарифе Render: это небольшой Node.js-процесс, который только знакомит участников.</p>
+
+  <h3>Что нужно</h3>
+  <ol class="doc-steps">
+    <li class="doc-step"><span class="doc-step-num">1</span><div class="doc-step-body"><b>Аккаунт Render</b><span>Регистрация на <a href="https://render.com" target="_blank" rel="noopener">render.com</a> через GitHub или почту.</span></div></li>
+    <li class="doc-step"><span class="doc-step-num">2</span><div class="doc-step-body"><b>Мини-проект в GitHub</b><span>Создайте репозиторий с двумя файлами: <code>package.json</code> и <code>server.js</code> (код ниже).</span></div></li>
+    <li class="doc-step"><span class="doc-step-num">3</span><div class="doc-step-body"><b>Web Service в Render</b><span><b>New</b> → <b>Web Service</b> → подключите репозиторий → Build Command: <code>npm install</code>, Start Command: <code>npm start</code>, тариф <b>Free</b>.</span></div></li>
+    <li class="doc-step"><span class="doc-step-num">4</span><div class="doc-step-body"><b>Впишите адрес в приложении</b><span>На главной странице нажмите <b>Сервер</b> (справа сверху), укажите хост вида <code>ваш-сервис.onrender.com</code>, порт <code>443</code>, путь <code>/</code>, ключ <code>peerjs</code>. Сохраните.</span></div></li>
+  </ol>
+
+  <h3>package.json</h3>
+  <pre><code>{
+  "name": "komnata-signal",
+  "private": true,
+  "scripts": { "start": "node server.js" },
+  "dependencies": { "peerjs": "^1.5.5" }
+}</code></pre>
+
+  <h3>server.js</h3>
+  <pre><code>const { PeerServer } = require('peerjs');
+
+const port = process.env.PORT || 9000;
+PeerServer({ port, path: '/' });
+console.log('PeerServer on ' + port);</code></pre>
+
+  <div class="doc-note doc-warn"><b>Учтите:</b> бесплатный инстанс Render «засыпает» после 15 минут простоя. Первое подключение после паузы может занять до минуты — участники просто увидят «Подключение».</div>
+
+  <h2>Если видео не соединяется</h2>
+  <p>Сначала исключите простое: оба участника должны быть на <b>опубликованном</b> сайте (не в предпросмотре), в комнате с одним и тем же кодом, и оба должны нажать «Войти в комнату».</p>
+  <p>Дальше нажмите на счётчик участников <b>«1 / 10»</b> в шапке комнаты — откроется «Состояние связи». Там видно код комнаты, ваш слот, статус сигналинга и по каждому участнику: открыт ли канал данных (<code>data</code>) и установилось ли медиасоединение (<code>pc</code>, <code>ice</code>). Кнопка «Скопировать» копирует отчёт целиком.</p>
+  <ul>
+    <li><b>Участник вообще не появился в списке</b> — разные коды комнат, другой сайт или участник остался в окне входа.</li>
+    <li><b>Участник есть, но <code>pc: checking</code> или <code>failed</code></b> — сети не смогли соединиться напрямую. Нужен TURN-сервер: он работает как ретранслятор для строгого NAT и мобильных операторов.</li>
+    <li><b><code>pc: connected</code>, но видео нет</b> — проверьте, не выключена ли камера кнопкой, и разрешён ли доступ в браузере.</li>
+  </ul>
+
+  <h3>Как подключить TURN</h3>
+  <p>Бесплатный TURN выдаёт, например, <a href="https://www.metered.ca/tools/openrelay/" target="_blank" rel="noopener">Metered</a> или <a href="https://www.expressturn.com" target="_blank" rel="noopener">ExpressTURN</a>. После регистрации вы получите URL вида <code>turn:host:3478</code>, логин и пароль.</p>
+  <p>В приложении нажмите <b>Сервер</b> (справа сверху) и заполните поля <b>TURN URL</b>, <b>логин</b>, <b>пароль</b>. Настройки сохранятся в этом браузере и применятся при следующем входе в комнату.</p>
+  <div class="doc-note doc-warn"><b>Важно:</b> TURN задаётся отдельно в каждом браузере. Чтобы не просить друзей что-то настраивать, пришлите данные TURN разработчику — их можно прописать в коде как значения по умолчанию для всех участников.</div>
+
+  <h2>Проверка перед отправкой ссылки</h2>
+  <table class="doc-table">
+    <tr><th>Что проверить</th><th>Как</th></tr>
+    <tr><td>HTTPS</td><td>Адрес начинается с <code>https://</code>, в строке браузера есть замок</td></tr>
+    <tr><td>Камера и микрофон</td><td>Нажмите «Разрешить» в запросе браузера; проверьте себя в окне предпросмотра</td></tr>
+    <tr><td>Два устройства</td><td>Откройте ссылку на телефоне и компьютере, проверьте видео, звук и чат</td></tr>
+    <tr><td>Картинки</td><td>Отправьте скриншот в чат — он должен появиться у второго участника</td></tr>
+    <tr><td>Показ экрана</td><td>Кнопка «Экран» на компьютере; на iPhone/iPad эта функция недоступна</td></tr>
+    <tr><td>Мобильная версия</td><td>Проверьте, что кнопки не перекрывают видео и чат открывается на весь экран</td></tr>
+  </table>
+
+  <h2>Ограничения и как с ними жить</h2>
+  <table class="doc-table">
+    <tr><th>Ограничение</th><th>Что делать</th></tr>
+    <tr><td>До 10 человек</td><td>Это лимит комнаты. Одиннадцатый увидит «Комната заполнена» — создайте новую ссылку</td></tr>
+    <tr><td>Mesh-схема</td><td>Каждый отправляет видео каждому. Для 6–10 человек нужен хороший Wi-Fi или кабель; приложение снижает качество автоматически</td></tr>
+    <tr><td>Строгий NAT</td><td>В коде уже подключён бесплатный TURN Open Relay. Если у части участников нет соединения, зарегистрируйте бесплатный TURN в Metered и замените учётные данные в массиве <code>ICE_SERVERS</code> в <code>app.js</code></td></tr>
+    <tr><td>Нет записи</td><td>Так и задумано: запись, доски и транскрипция не входят в проект</td></tr>
+    <tr><td>Нет пароля</td><td>Ссылка и есть ключ. Код комнаты случайный, 6 символов; не публикуйте ссылку в открытых каналах</td></tr>
+    <tr><td>iOS и демонстрация экрана</td><td>Safari на iPhone не поддерживает захват экрана. Видео, звук и чат работают</td></tr>
+  </table>
+
+  <h2>Частые вопросы</h2>
+  <h3>Нужно ли что-то платить или где-то регистрировать комнату?</h3>
+  <p>Нет. Комната создаётся в браузере, живёт, пока в ней есть участники, и исчезает, когда все вышли. Никаких баз данных и аккаунтов.</p>
+
+  <h3>Можно ли сделать постоянную комнату с одним адресом?</h3>
+  <p>Да. Просто не создавайте новую, а откройте существующую ссылку: код комнаты хранится в адресе <code>?r=код</code>. Если ссылка одна и та же — это одна и та же комната. Ограничение — 10 одновременных участников.</p>
+
+  <h3>Почему при первом входе тишина?</h3>
+  <p>Браузер блокирует автозапуск звука до первого клика. Нажмите в любое место страницы — звук включится. Также проверьте, что микрофон не выключен кнопкой внизу.</p>
+
+  <h3>Куда попадают сообщения и картинки?</h3>
+  <p>Никуда: они передаются напрямую между браузерами по шифрованному WebRTC-каналу и хранятся только в памяти вкладки. После выхода история очищается.</p>
+
+  <h3>Почему скопированная ссылка начинается с autoclaw-local-html://</h3>
+  <p>Так открывается локальный предпросмотр в приложении AutoClaw: это внутренний адрес, он существует только на вашем компьютере и у друзей не откроется. Сайт определяет такой режим и вместо ссылки копирует код комнаты. Настоящая ссылка появляется только на опубликованном сайте — например, <code>https://komnata-ivan.netlify.app/?r=код</code>.</p>
+
+  <h3>Можно ли встроить это в свой сайт?</h3>
+  <p>Да, это обычные статические файлы. Скопируйте их в подпапку, например <code>/room/</code>, и дайте ссылку на неё. Внешних зависимостей, кроме бесплатного сервера сигнализации, нет.</p>
+
+  <p class="doc-foot-link"><a class="doc-back" href="./"><svg class="icon"><use href="#i-arrow-left"></use></svg> Вернуться к комнате</a></p>
+</main>
+
+</body>
+</html>
