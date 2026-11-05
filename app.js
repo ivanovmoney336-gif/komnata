@@ -1108,15 +1108,46 @@
     throw error;
   }
 
+  async function pickSlot(room) {
+    try {
+      const res = await fetch('https://' + state.server.host + '/peerjs/slot?room=' + encodeURIComponent(room), {
+        cache: 'no-store'
+      });
+      if (!res.ok) return 0;
+      const data = await res.json();
+      const slot = Number(data.slot);
+      return slot >= 1 && slot <= MAX_PEERS ? slot : 0;
+    } catch {
+      return 0;
+    }
+  }
+
+  async function openSlot(room, slot) {
+    const peer = await openPeer(peerIdFor(room, slot));
+    state.peer = peer;
+    state.slot = slot;
+    attachPeerEvents(peer);
+    return slot;
+  }
+
   async function acquireSlotOnServer(room) {
+    const preferred = await pickSlot(room);
+    if (preferred) {
+      try {
+        return await openSlot(room, preferred);
+      } catch (err) {
+        if (err && err.type !== 'unavailable-id') {
+          const error = new Error('signal');
+          error.cause = err;
+          throw error;
+        }
+      }
+    }
+
     let sawUnavailable = false;
     for (let slot = 1; slot <= MAX_PEERS; slot += 1) {
       try {
-        const peer = await openPeer(peerIdFor(room, slot));
-        state.peer = peer;
-        state.slot = slot;
-        attachPeerEvents(peer);
-        return slot;
+        return await openSlot(room, slot);
       } catch (err) {
         const type = err && err.type;
         if (type === 'unavailable-id') {
