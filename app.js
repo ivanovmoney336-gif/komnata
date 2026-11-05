@@ -1132,8 +1132,13 @@
 
     peer.on('disconnected', () => {
       setConnState('connecting', 'Переподключение');
-      if (state.joined) setBanner('Связь с сервером потеряна. Переподключаемся…');
       try { peer.reconnect(); } catch {}
+    });
+
+    peer.on('open', () => {
+      if (!state.joined) return;
+      setConnState('online', 'На связи');
+      setBanner('');
     });
 
     peer.on('close', () => {
@@ -1145,10 +1150,7 @@
     const type = err && err.type;
     if (type === 'peer-unavailable') return;
     if (type === 'network' || type === 'server-error' || type === 'socket-error' || type === 'socket-closed') {
-      setConnState('offline', 'Нет связи');
-      if (state.joined) {
-        setBanner('Сервер знакомства недоступен. Проверьте соединение или укажите свой сервер.');
-      }
+      setConnState('connecting', 'Переподключение');
     }
   }
 
