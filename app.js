@@ -1011,6 +1011,21 @@
     state.server = server;
   }
 
+  function sessionToken() {
+    try {
+      let token = sessionStorage.getItem('komnata.token.v1');
+      if (!token) {
+        const buf = new Uint8Array(16);
+        crypto.getRandomValues(buf);
+        token = Array.from(buf, (byte) => byte.toString(16).padStart(2, '0')).join('');
+        sessionStorage.setItem('komnata.token.v1', token);
+      }
+      return token;
+    } catch {
+      return '';
+    }
+  }
+
   function peerOptions() {
     const s = state.server;
     return {
@@ -1020,6 +1035,7 @@
       path: s.path || '/',
       secure: s.secure !== false,
       key: s.key || 'peerjs',
+      token: sessionToken(),
       config: { iceServers: iceServers() }
     };
   }
