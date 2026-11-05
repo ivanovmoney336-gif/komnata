@@ -1130,11 +1130,29 @@
     return slot;
   }
 
+  async function openSlotWithRetry(room, slot, attempts = 3) {
+    let lastError = null;
+    for (let attempt = 0; attempt < attempts; attempt += 1) {
+      try {
+        return await openSlot(room, slot);
+      } catch (err) {
+        lastError = err;
+        if (err && err.type === 'unavailable-id') throw err;
+        if (state.peer) {
+          try { state.peer.destroy(); } catch {}
+          state.peer = null;
+        }
+        await new Promise((resolve) => setTimeout(resolve, 700 + attempt * 600));
+      }
+    }
+    throw lastError;
+  }
+
   async function acquireSlotOnServer(room) {
     const preferred = await pickSlot(room);
     if (preferred) {
       try {
-        return await openSlot(room, preferred);
+        return await openSlotWithRetry(room, preferred);
       } catch (err) {
         if (err && err.type !== 'unavailable-id') {
           const error = new Error('signal');
