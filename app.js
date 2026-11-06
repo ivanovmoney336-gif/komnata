@@ -1731,6 +1731,15 @@
     const typed = clampText(els.nameInput.value, 24);
     state.name = typed || 'Гость';
     try { localStorage.setItem(LS_NAME, state.name); } catch {}
+
+    const display = encodeURIComponent(withRank(state.name));
+    const jitsiUrl = 'https://meet.jit.si/komnata-' + state.room +
+      '#config.prejoinPageEnabled=false&config.prejoinConfig.enabled=false' +
+      '&config.disableDeepLinking=true&userInfo.displayName="' + display + '"';
+    setLobbyStatus('Открываем комнату…');
+    location.href = jitsiUrl;
+    return;
+
     state.connecting = true;
     state.leaving = false;
     els.btnEnter.disabled = true;
