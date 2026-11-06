@@ -17,6 +17,7 @@
   const LS_NAME = 'komnata.name.v2';
   const LS_SERVER = 'komnata.server.v4';
   const NAME_PREFIX = 'Генерал';
+  const JITSI_HOST = 'meet.ffmuc.net';
 
   function defaultSignalHost() {
     return 'signal.generalskay.site';
@@ -1733,7 +1734,7 @@
     try { localStorage.setItem(LS_NAME, state.name); } catch {}
 
     const display = encodeURIComponent(withRank(state.name));
-    const jitsiUrl = 'https://meet.jit.si/komnata-' + state.room +
+    const jitsiUrl = 'https://' + JITSI_HOST + '/komnata-' + state.room +
       '#config.prejoinPageEnabled=false&config.prejoinConfig.enabled=false' +
       '&config.disableDeepLinking=true&userInfo.displayName="' + display + '"';
     setLobbyStatus('Открываем комнату…');
